@@ -141,6 +141,17 @@ void Game::processInput()
   players[0]->pos.y += 0.01f/sqrt(2.0f)*(-inputManager.isPressed(SDLK_RIGHT)+inputManager.isPressed(SDLK_LEFT));
   players[0]->pos.y += 0.01f/sqrt(2.0f)*(inputManager.isPressed(SDLK_UP)-inputManager.isPressed(SDLK_DOWN));
 
+  // Scroll window
+  MousePosition mousePosition = inputManager.getMousePosition();
+  if(std::abs(mousePosition.x) < 5)
+    camera.scroll(-scrollSpeed, 0.0f);
+  if(std::abs(screenWidth - mousePosition.x) < 5)
+    camera.scroll(scrollSpeed, 0.0f);
+  if(std::abs(mousePosition.y) < 5)
+    camera.scroll(0.0f, scrollSpeed);
+  if(std::abs(screenHeight - mousePosition.y) < 5)
+    camera.scroll(0.0f, -scrollSpeed);
+  
   // Stop program
   if(inputManager.isPressed(SDLK_ESCAPE))
     gameState = GameState::STOPPED;

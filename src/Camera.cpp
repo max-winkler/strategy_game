@@ -3,7 +3,9 @@
 
 #include "Camera.h"
 
-Camera::Camera() : zoom(1.0f), cameraMatrix(1.0f)
+Camera::Camera() :
+  zoom(1.0f), cameraMatrix(1.0f),
+  cameraPositionX(0.0f), cameraPositionY(0.0f)
 {
   updateMatrix();
 }
@@ -11,20 +13,28 @@ Camera::Camera() : zoom(1.0f), cameraMatrix(1.0f)
 void Camera::updateMatrix()
 {
   rotationMatrix = glm::mat4(1.0f);  
-
-  // This worked quite well  
   rotationMatrix = glm::rotate(rotationMatrix, (float)(M_PI/3.0f), glm::vec3(1.0f, 0.0f, 0.0f));
   rotationMatrix = glm::rotate(rotationMatrix, (float)(M_PI/4.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-  cameraMatrix = glm::scale(glm::mat4(1.0f), zoom*glm::vec3(1.0f, 1.0f, 0.0f)) * rotationMatrix;
-    
+  std::cout << "Camera position: " << cameraPositionX << " " << cameraPositionY << std::endl;
+  
+  cameraMatrix = glm::scale(glm::mat4(1.0f), zoom*glm::vec3(1.0f, 1.0f, 0.0f))
+    * glm::translate(glm::mat4(1.0f), glm::vec3(cameraPositionX, cameraPositionY, 0.0f))
+    * rotationMatrix;    
 }
 
 void Camera::getWorldFromScreenCoords(float x, float y, float& worldX, float& worldY) const
 {
+  //y -= cameraPositionY;
+  x = (x/zoom-cameraPositionX);
+  y = (y/zoom-cameraPositionY);
   float z = tan(M_PI/3.0f)*y;
   glm::vec4 screenVec(x, y, z, 1.0f);
-  glm::vec4 worldVec = glm::scale(glm::mat4(1.0f), 1.0f/zoom*glm::vec3(1.0f, 1.0f, 0.0f))*glm::inverse(rotationMatrix)*screenVec;
+  glm::vec4 worldVec =
+    // glm::scale(glm::mat4(1.0f), 1.0f/zoom*glm::vec3(1.0f, 1.0f, 0.0f))
+    glm::inverse(rotationMatrix)
+    //    * glm::inverse(glm::translate(glm::mat4(1.0f), glm::vec3(cameraPositionX, cameraPositionY, 0.0f)))    
+    * screenVec;
   
   worldX = worldVec[0];
   worldY = worldVec[1];
@@ -32,10 +42,17 @@ void Camera::getWorldFromScreenCoords(float x, float y, float& worldX, float& wo
 
 void Camera::increaseZoom(float inc)
 {
-  std::cout << "Increasing zoom by " << inc << std::endl;
   zoom = std::max(0.02f, std::min(1.0f, zoom*(1.0f+inc)));
   updateMatrix();
   std::cout << "Current zoom: " << zoom << std::endl;
+}
+
+void Camera::scroll(float x, float y)
+{
+  cameraPositionX -= x/zoom;
+  cameraPositionY -= y/zoom;
+
+   updateMatrix();   
 }
 
 float Camera::getZoom()

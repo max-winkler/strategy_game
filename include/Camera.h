@@ -10,13 +10,20 @@ class Camera
   Camera();
 
   void updateMatrix();
+
   void increaseZoom(float);
+  void scroll(float, float);
+    
   float getZoom();
   float* getCameraMatrix();
   void getWorldFromScreenCoords(float, float, float&, float&) const;
+
  private:
   
   float zoom;
+  float cameraPositionX;
+  float cameraPositionY;
+  
   glm::mat4 rotationMatrix;
   glm::mat4 cameraMatrix;
 };

@@ -37,6 +37,8 @@ class Game
   const int screenWidth = 1200;
   const int screenHeight = 900;
   const int maxFps = 60;
+  const float scrollSpeed = 0.02f;
+  
   float fps;
 
   bool buildMode;
