@@ -2,6 +2,7 @@
 #define _PLAYER_H_
 
 #include "Sprite.h"
+#include "SpriteSheet.h"
 
 class Player : public Sprite
 {
@@ -11,17 +12,19 @@ class Player : public Sprite
 
   void initialize();
   void draw();
-
+  void updateAnimation();
+  
+  void move(bool nw, bool se, bool ne, bool sw);
+  
   struct Velocity{
-    int x = 0;
-    int y = 0;
+    float x = 0;
+    float y = 0;
   } vel;
 
   float rotation;
   
  private:
-  
-  const float size = 1.0;
+  int moveMode, prevMoveMode;
 };
 
 #endif

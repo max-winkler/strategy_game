@@ -5,7 +5,7 @@
 
 #include "TextureManager.h"
 
-std::map<std::string, GLuint> TextureManager::textures;
+std::map<std::string, TextureInfo> TextureManager::textures;
 
 void TextureManager::loadTexture(const std::string& fileName, unsigned char*& data,
 			   unsigned& width, unsigned& height)
@@ -57,41 +57,38 @@ void TextureManager::loadTexture(const std::string& fileName, unsigned char*& da
   png_read_image(png, row_pointers);
 }
 
-GLuint TextureManager::getTextureID(const std::string& fileName)
+TextureInfo TextureManager::getTextureInfo(const std::string& fileName)
 {
   auto it = textures.find(fileName);
   if(it == textures.end())
     {
-      GLuint textureID;
+      TextureInfo textureInfo;
       unsigned char* textureData;
-      unsigned textureWidth, textureHeight;
-      TextureManager::loadTexture(fileName.c_str(), textureData, textureWidth, textureHeight);
+
+      TextureManager::loadTexture(fileName.c_str(), textureData,
+			    textureInfo.width, textureInfo.height);
       
-      glGenTextures(1, &textureID);
-      glBindTexture(GL_TEXTURE_2D, textureID);
-      std::cout << "Created texture with ID " << textureID << std::endl;
+      glGenTextures(1, &(textureInfo.textureID));
+      glBindTexture(GL_TEXTURE_2D, textureInfo.textureID);
+      std::cout << "Created texture with ID " << textureInfo.textureID << std::endl;
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight,
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureInfo.width, textureInfo.height,
 	         0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
       glGenerateMipmap(GL_TEXTURE_2D);
       
       glBindTexture(GL_TEXTURE_2D, 0);
 
-      TextureManager::addTexture(fileName, textureID);
+      // Add to texture map
+      textures[fileName] = textureInfo;
 
       // Delete texture data
       delete[] textureData;  
-      return textureID;
+      return textureInfo;
     }
 
   return it->second;
-}
-
-void TextureManager::addTexture(const std::string& fileName, GLuint textureID)
-{
-  textures[fileName] = textureID;
 }

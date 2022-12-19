@@ -3,9 +3,13 @@
 
 #include "Camera.h"
 
-Camera::Camera() :
-  zoom(1.0f), cameraMatrix(1.0f),
-  cameraPositionX(0.0f), cameraPositionY(0.0f)
+float Camera::zoom = 1.0f;
+float Camera::cameraPositionX = 0.0f;
+float Camera::cameraPositionY = 0.0f;
+glm::mat4 Camera::rotationMatrix;
+glm::mat4 Camera::cameraMatrix;
+
+Camera::Camera() 
 {
   updateMatrix();
 }
@@ -23,18 +27,14 @@ void Camera::updateMatrix()
     * rotationMatrix;    
 }
 
-void Camera::getWorldFromScreenCoords(float x, float y, float& worldX, float& worldY) const
+void Camera::getWorldFromScreenCoords(float x, float y, float& worldX, float& worldY) 
 {
   //y -= cameraPositionY;
   x = (x/zoom-cameraPositionX);
   y = (y/zoom-cameraPositionY);
   float z = tan(M_PI/3.0f)*y;
   glm::vec4 screenVec(x, y, z, 1.0f);
-  glm::vec4 worldVec =
-    // glm::scale(glm::mat4(1.0f), 1.0f/zoom*glm::vec3(1.0f, 1.0f, 0.0f))
-    glm::inverse(rotationMatrix)
-    //    * glm::inverse(glm::translate(glm::mat4(1.0f), glm::vec3(cameraPositionX, cameraPositionY, 0.0f)))    
-    * screenVec;
+  glm::vec4 worldVec = glm::transpose(rotationMatrix) * screenVec;
   
   worldX = worldVec[0];
   worldY = worldVec[1];
@@ -60,7 +60,12 @@ float Camera::getZoom()
   return zoom;
 }
 
-float* Camera::getCameraMatrix()
+float* Camera::getCameraMatrixPtr()
 {
   return &(cameraMatrix[0][0]);
+}
+
+glm::mat4 Camera::getCameraMatrix()
+{
+  return cameraMatrix;
 }

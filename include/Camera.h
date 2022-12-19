@@ -9,23 +9,24 @@ class Camera
  public:
   Camera();
 
-  void updateMatrix();
+  static void updateMatrix();
 
-  void increaseZoom(float);
-  void scroll(float, float);
+  static void increaseZoom(float);
+  static void scroll(float, float);
     
-  float getZoom();
-  float* getCameraMatrix();
-  void getWorldFromScreenCoords(float, float, float&, float&) const;
+  static float getZoom();
+  static float* getCameraMatrixPtr();
+  static glm::mat4 getCameraMatrix();
+  static void getWorldFromScreenCoords(float, float, float&, float&);
 
  private:
   
-  float zoom;
-  float cameraPositionX;
-  float cameraPositionY;
+  static float zoom;
+  static float cameraPositionX;
+  static float cameraPositionY;
   
-  glm::mat4 rotationMatrix;
-  glm::mat4 cameraMatrix;
+  static glm::mat4 rotationMatrix;
+  static glm::mat4 cameraMatrix;
 };
 
 #endif

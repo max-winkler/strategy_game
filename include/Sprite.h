@@ -3,6 +3,16 @@
 
 #include <GL/glew.h>
 
+#include "Vertex.h"
+#include "Camera.h"
+#include "SpriteSheet.h"
+
+struct Position {
+  Position(float x, float y) : x(x), y(y) {}
+    float x = 0.0;
+    float y = 0.0;
+};
+  
 class Sprite
 {
  public:
@@ -13,17 +23,16 @@ class Sprite
   void setAlpha(float);
   void draw();
 
-  struct Position {
-  Position(float x, float y) : x(x), y(y) {}
-    float x = 0.0;
-    float y = 0.0;
-  } pos;
-
+  Position pos;
+  Position size;
+  
  protected:
   GLuint vao;
   GLuint vbo;
-  GLuint textureID;
   float alpha;
+  GLuint textureID; // Remove this and use spriteSheet later
+  SpriteSheet spriteSheet;
+  Vertex vertices[6];
 };
 
 #endif

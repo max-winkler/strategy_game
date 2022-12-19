@@ -8,9 +8,10 @@ default:
 	g++ -c -Iinclude src/World.cpp -o src/World.o
 	g++ -c -Iinclude src/Sprite.cpp -o src/Sprite.o
 	g++ -c -Iinclude src/Building.cpp -o src/Building.o
-	g++ -c -Iinclude src/GLSLProgram.cpp -o src/GLSLProgram.o	
+	g++ -c -Iinclude src/GLSLProgram.cpp -o src/GLSLProgram.o
+	g++ -c -Iinclude src/SpriteSheet.cpp -o src/SpriteSheet.o	
 	g++ -c -Iinclude main.cpp -o main.o
-	g++ main.o src/Game.o src/Player.o src/Vertex.o src/TextureManager.o src/Camera.o src/InputManager.o src/World.o src/Sprite.o src/Building.o src/GLSLProgram.o -lGL -lGLEW -lSDL2 -lpng -o mygame
+	g++ main.o src/Game.o src/Player.o src/Vertex.o src/TextureManager.o src/Camera.o src/InputManager.o src/World.o src/Sprite.o src/Building.o src/GLSLProgram.o src/SpriteSheet.o -lGL -lGLEW -lSDL2 -lpng -o mygame
 
 clean:
 	rm src/*.o mygame

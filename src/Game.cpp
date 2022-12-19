@@ -136,20 +136,24 @@ void Game::processInput()
     }
 
   // Process pressed keys
-  players[0]->pos.x += 0.01f/sqrt(2.0f)*(inputManager.isPressed(SDLK_RIGHT)-inputManager.isPressed(SDLK_LEFT));
-  players[0]->pos.x += 0.01f/sqrt(2.0f)*(inputManager.isPressed(SDLK_UP)-inputManager.isPressed(SDLK_DOWN));
-  players[0]->pos.y += 0.01f/sqrt(2.0f)*(-inputManager.isPressed(SDLK_RIGHT)+inputManager.isPressed(SDLK_LEFT));
-  players[0]->pos.y += 0.01f/sqrt(2.0f)*(inputManager.isPressed(SDLK_UP)-inputManager.isPressed(SDLK_DOWN));
-
+  players[0]->move(inputManager.isPressed(SDLK_RIGHT), inputManager.isPressed(SDLK_LEFT),
+	         inputManager.isPressed(SDLK_UP), inputManager.isPressed(SDLK_DOWN));
+  /*	         
+  players[0]->pos.x += 0.02f/sqrt(2.0f)*(inputManager.isPressed(SDLK_RIGHT)-inputManager.isPressed(SDLK_LEFT));
+  players[0]->pos.x += 0.02f/sqrt(2.0f)*(inputManager.isPressed(SDLK_UP)-inputManager.isPressed(SDLK_DOWN));
+  players[0]->pos.y += 0.02f/sqrt(2.0f)*(-inputManager.isPressed(SDLK_RIGHT)+inputManager.isPressed(SDLK_LEFT));
+  players[0]->pos.y += 0.02f/sqrt(2.0f)*(inputManager.isPressed(SDLK_UP)-inputManager.isPressed(SDLK_DOWN));
+  */
+  
   // Scroll window
   MousePosition mousePosition = inputManager.getMousePosition();
-  if(std::abs(mousePosition.x) < 5)
+  if(std::abs(mousePosition.x) < 10)
     camera.scroll(-scrollSpeed, 0.0f);
-  if(std::abs(screenWidth - mousePosition.x) < 5)
+  if(std::abs(screenWidth - mousePosition.x) < 10)
     camera.scroll(scrollSpeed, 0.0f);
-  if(std::abs(mousePosition.y) < 5)
+  if(std::abs(mousePosition.y) < 10)
     camera.scroll(0.0f, scrollSpeed);
-  if(std::abs(screenHeight - mousePosition.y) < 5)
+  if(std::abs(screenHeight - mousePosition.y) < 10)
     camera.scroll(0.0f, -scrollSpeed);
   
   // Stop program
@@ -178,7 +182,7 @@ void Game::drawScene()
 
   // Set camera matrix
   GLuint cameraMatrixLocation = glGetUniformLocation(glslPrograms[0].getId(), "projection");
-  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, camera.getCameraMatrix());
+  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, camera.getCameraMatrixPtr());
   
   world.draw();  
 
@@ -191,7 +195,7 @@ void Game::drawScene()
   glUseProgram(glslPrograms[1].getId());  
   
   cameraMatrixLocation = glGetUniformLocation(glslPrograms[1].getId(), "projection");
-  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, camera.getCameraMatrix());
+  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, camera.getCameraMatrixPtr());
   
   for(auto it = buildings.begin(); it != buildings.end(); ++it)
     (*it)->draw();

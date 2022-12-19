@@ -9,7 +9,7 @@
 #include "TextureManager.h"
 
 Building::Building(float x, float y) :
-  Sprite(x, y, 0.0f, 0.0f)
+  Sprite(x, y, 1.0f, 1.0f)
 {
 }
 
@@ -22,7 +22,7 @@ void Building::initialize()
     Sprite::initialize();
   
   // Load texture  
-  textureID = TextureManager::getTextureID("building_1.png");
+  textureID = TextureManager::getTextureInfo("building_1.png").textureID;
 }
 
 void Building::draw()

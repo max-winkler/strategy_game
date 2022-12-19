@@ -1,8 +1,10 @@
 #include "Sprite.h"
-#include "Vertex.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 
 Sprite::Sprite(float x, float y, float width, float height)
-  : pos(x, y), vbo(0), vao(0), alpha(1.0)
+  : pos(x, y), size(width, height), vbo(0), vao(0), alpha(1.0)
 {
 }
 
@@ -12,13 +14,12 @@ Sprite::~Sprite()
 
 void Sprite::initialize()
 {
-  Vertex vertices[6];
-  vertices[0].setPosition(-0.5f, -0.5f);
-  vertices[1].setPosition(0.5f, -0.5f);
-  vertices[2].setPosition(-0.5f, 0.5f);
-  vertices[3].setPosition(0.5f, -0.5f);
-  vertices[4].setPosition(0.5f, 0.5f);
-  vertices[5].setPosition(-0.5f, 0.5f);
+  vertices[0].setPosition(-size.x/2.0f, -size.y/2.0f);
+  vertices[1].setPosition( size.x/2.0f, -size.y/2.0f);
+  vertices[2].setPosition(-size.x/2.0f,  size.y/2.0f);
+  vertices[3].setPosition( size.x/2.0f, -size.y/2.0f);
+  vertices[4].setPosition( size.x/2.0f,  size.y/2.0f);
+  vertices[5].setPosition(-size.x/2.0f,  size.y/2.0f);
 
   vertices[0].setColor(0.9, 0.6, 0.7, alpha);
   vertices[1].setColor(0.8, 0.7, 0.2, alpha);
@@ -27,20 +28,21 @@ void Sprite::initialize()
   vertices[4].setColor(0.2, 0.4, 0.2, alpha);
   vertices[5].setColor(0.8, 0.7, 0.2, alpha);
 
+  /*
   vertices[0].setUV(0.5, 0.0);
   vertices[1].setUV(1.0, 0.5);
   vertices[2].setUV(0.0, 0.5);
   vertices[3].setUV(1.0, 0.5);
   vertices[4].setUV(0.5, 1.0);
   vertices[5].setUV(0.0, 0.5);  
-  /*
+  */
+  
   vertices[0].setUV(0.0, 0.0);
   vertices[1].setUV(1.0, 0.0);
   vertices[2].setUV(0.0, 1.0);
   vertices[3].setUV(1.0, 0.0);
   vertices[4].setUV(1.0, 1.0);
-  vertices[5].setUV(0.0, 1.0);  
-  */
+  vertices[5].setUV(0.0, 1.0);   
   
   glGenVertexArrays(1, &vao);  
   glGenBuffers(1, &vbo);
