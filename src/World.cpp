@@ -23,7 +23,9 @@ void World::initialize()
   // Initialize random number generator
   std::mt19937 gen;
   std::binomial_distribution<int> idist(15, 0.2);
-  
+
+  const float overlap = 1.0f/50;
+    
   vertices = new Vertex[2*3*numGridLines*numGridLines];
   for(int i=0; i<numGridLines; ++i)
     {
@@ -34,11 +36,11 @@ void World::initialize()
 	
 	// Set vertex positions in sprite
 	vertices[6*(numGridLines*i+j) + 0].setPosition(x+0.0f, y+0.0f);
-	vertices[6*(numGridLines*i+j) + 1].setPosition(x+1.0f, y+0.0f);
-	vertices[6*(numGridLines*i+j) + 2].setPosition(x+1.0f, y+1.0f);
+	vertices[6*(numGridLines*i+j) + 1].setPosition(x+1.0f+overlap, y+0.0f);
+	vertices[6*(numGridLines*i+j) + 2].setPosition(x+1.0f+overlap, y+1.0f+overlap);
 	vertices[6*(numGridLines*i+j) + 3].setPosition(x+0.0f, y+0.0f);
-	vertices[6*(numGridLines*i+j) + 4].setPosition(x+1.0f, y+1.0f);
-	vertices[6*(numGridLines*i+j) + 5].setPosition(x+0.0f, y+1.0f);
+	vertices[6*(numGridLines*i+j) + 4].setPosition(x+1.0f+overlap, y+1.0f+overlap);
+	vertices[6*(numGridLines*i+j) + 5].setPosition(x+0.0f, y+1.0f+overlap);
 	
 	// Set UV coordinates in sprite
 	int textureIdx = idist(gen)%15;
