@@ -64,8 +64,8 @@ void Game::initialize()
 
   float x, y;
   world.getCellCoordinates(50, 50, x, y);
-  buildings.push_back(new Building(x, y));
-  buildings.back()->initialize();
+  //buildings.push_back(new Building(x, y));
+  //buildings.back()->initialize();
 
   newBuilding.setAlpha(0.2f);
   newBuilding.initialize();
@@ -197,9 +197,11 @@ void Game::drawScene()
   cameraMatrixLocation = glGetUniformLocation(glslPrograms[1].getId(), "projection");
   glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, camera.getCameraMatrixPtr());
   
-  for(auto it = buildings.begin(); it != buildings.end(); ++it)
+  /*
+    for(auto it = buildings.begin(); it != buildings.end(); ++it)
     (*it)->draw();
-
+  */
+  
   // If build mode is on
   if(buildMode)
     {

@@ -29,8 +29,6 @@ void TextureManager::loadTexture(const std::string& fileName, unsigned char*& da
   width = png_get_image_width(png, info);
   height = png_get_image_height(png, info);
 
-  std::cout << "Image: " << width << "x" << height << std::endl;
-  
   int color_type = png_get_color_type(png, info);
   switch(color_type)
     {
@@ -70,7 +68,9 @@ TextureInfo TextureManager::getTextureInfo(const std::string& fileName)
       
       glGenTextures(1, &(textureInfo.textureID));
       glBindTexture(GL_TEXTURE_2D, textureInfo.textureID);
-      std::cout << "Created texture with ID " << textureInfo.textureID << std::endl;
+
+      std::cout << "Created texture from file " << fileName << " with ID " << textureInfo.textureID << std::endl;
+      
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

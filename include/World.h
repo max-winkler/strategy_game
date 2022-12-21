@@ -3,6 +3,9 @@
 
 #include <GL/glew.h>
 
+#include "Vertex.h"
+#include "SpriteSheet.h"
+
 class World
 {
  public:
@@ -20,6 +23,12 @@ class World
   unsigned numGridLines;
   GLuint vao;
   GLuint vbo;
+
+  // Sprite sheet containing tiles of the world
+  SpriteSheet spriteSheet;
+
+  // 6 vertices of the two triangles forming a tile
+  Vertex* vertices;
 };
 
 #endif

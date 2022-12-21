@@ -21,7 +21,7 @@
 #define WALK_DOWN   8
 
 Player::Player(float x, float y) :
-  Sprite(x, y, 1.0f, 1.33333f), rotation(0), moveMode(0), prevMoveMode(0)
+  Sprite(x, y, 0.5f, 0.666f), rotation(0), moveMode(0), prevMoveMode(0)
 {
 }
 
@@ -63,7 +63,7 @@ void Player::draw()
 
 void Player::move(bool se, bool nw, bool ne, bool sw)
 {
-  const float speed = 0.02f;
+  const float speed = 0.01f;
   
   vel.x = ne+se-nw-sw;
   vel.y = ne+nw-se-sw;
@@ -97,11 +97,11 @@ void Player::updateAnimation()
   
   if(moveMode == WALK_RIGHT)
     {
-      textureIdx = (time/200)%8+1;
+      textureIdx = (time/150)%8+1;
     }
   else if(moveMode == WALK_LEFT)
     {
-      textureIdx = (time/200)%8+1;
+      textureIdx = (time/150)%8+1;
       flip = true;
     }
   else
