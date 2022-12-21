@@ -12,7 +12,7 @@ class World
   World(unsigned);
   ~World();
 
-  void initialize();
+  void initialize(const std::string&);
   void draw();
 
   void getCellCoordinates(unsigned, unsigned, float&, float&) const;

@@ -57,7 +57,7 @@ void Game::initialize()
 
   camera.updateMatrix();
   
-  world.initialize();
+  world.initialize(std::string("scenarios/world1.png"));
   
   players.push_back(new Player(0.0f, 0.0f));
   players.back()->initialize();

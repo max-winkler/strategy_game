@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <unordered_map>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -15,11 +16,66 @@ World::~World()
 {
 }
 
-void World::initialize()
-{
-  spriteSheet.initialize("images/tilesheet.png", 108, 108);
-  numGridLines = worldSize/cellWidth+1;
+void World::initialize(const std::string& scenarioFile)
+{  
+  // Read map file
+  unsigned mapHeight, mapWidth;
+  unsigned char* mapDataPtr; // = reinterpret_cast<unsigned char*>(mapData);
+  TextureManager::loadTexture(scenarioFile, mapDataPtr, mapHeight, mapWidth);
 
+  // Store map data in a struct
+  struct RGBAColor
+  {
+    unsigned char r, g, b, a;
+
+    bool operator==(const RGBAColor& that) const
+    {
+      return (this->r == that.r &&
+	    this->g == that.g &&
+	    this->b == that.b &&
+	    this->a == that.a);
+    }    
+  } *mapData = reinterpret_cast<RGBAColor*>(mapDataPtr);  
+
+  std::cout << "Map data read\n";
+  
+  struct TileIndexRange
+  {
+    unsigned row;
+    unsigned colMin, colMax;
+  };
+
+  const unsigned tilesPerRow = 16;
+  struct RGBAColorHash
+  {
+    unsigned operator()(const RGBAColor& color) const
+    {
+      return 255*255*255*(unsigned)(color.r)
+        + 255*255*(unsigned)(color.g)
+        + 255*(unsigned)(color.b)
+        + (unsigned)(color.a);
+    }
+  };
+
+  std::cout << "Hash class created\n";
+  
+  std::unordered_map<RGBAColor, TileIndexRange, RGBAColorHash> mapTileIndexRanges
+    = {{{0, 0, 255, 255}, {4, 8, 13}},
+       {{0, 255, 0, 255}, {0, 0, 15}},
+       {{255, 255, 0, 255}, {7, 0, 6}}};    
+
+  std::cout << "Map tile index ranges initialized.\n";
+  
+  if(mapHeight != mapWidth)
+    {
+      std::cout << "Error: Only square shaped maps allowed\n";
+      return;
+    }
+  numGridLines = mapHeight+1;  
+  
+  spriteSheet.initialize("images/tilesheet.png", 108, 108);
+  // numGridLines = worldSize/cellWidth+1; 
+  
   // Initialize random number generator
   std::mt19937 gen;
   std::binomial_distribution<int> idist(15, 0.2);
@@ -27,10 +83,10 @@ void World::initialize()
   const float overlap = 1.0f/50;
     
   vertices = new Vertex[2*3*numGridLines*numGridLines];
-  for(int i=0; i<numGridLines; ++i)
+  for(int i=0; i<mapHeight; ++i)
     {
       float x = (float)i-(float)(numGridLines-1)/2.0f;
-      for(int j=0; j<numGridLines; ++j)
+      for(int j=0; j<mapWidth; ++j)
         {
 	float y = (float)j-(float)(numGridLines-1)/2.0f;
 	
@@ -43,7 +99,20 @@ void World::initialize()
 	vertices[6*(numGridLines*i+j) + 5].setPosition(x+0.0f, y+1.0f+overlap);
 	
 	// Set UV coordinates in sprite
-	int textureIdx = idist(gen)%15;
+	RGBAColor mapPixel = mapData[i*mapWidth + j];
+	if(mapTileIndexRanges.find(mapPixel) == mapTileIndexRanges.end())
+	  {
+	    std::cout << "Error: unable to find texture index range\n";
+	    std::cout << "  map color      : RGBA("
+		    << (int)mapPixel.r << " " << (int)mapPixel.g
+		    << " " << (int)mapPixel.b << " " << (int)mapPixel.a << ")" << std::endl;
+	    std::cout << "  pixel position : " << i << " " << j << std::endl;
+	      return;
+	  }
+	
+	TileIndexRange mapTileIndexRange = mapTileIndexRanges[mapPixel];
+	
+	int textureIdx = mapTileIndexRange.row*tilesPerRow + mapTileIndexRange.colMin + idist(gen)%(mapTileIndexRange.colMax-mapTileIndexRange.colMin);
 	glm::vec4 uv = spriteSheet.getUVs(textureIdx);
 	
 	vertices[6*(numGridLines*i+j) + 0].setUV(0.5*(uv.x+uv.z), uv.w);
@@ -55,26 +124,6 @@ void World::initialize()
         }
     }
   
-  // OLD VERSION
-  /*
-    numGridLines = worldSize/cellWidth+1;
-
-  float* gridLines = new float[8*(numGridLines)];
-  for(unsigned i=0; i<numGridLines; ++i)
-    {
-      gridLines[4*i] = ((float)i-(float)(numGridLines-1)/2);
-      gridLines[4*i+1] = -(float)(numGridLines-1)/2;
-      gridLines[4*i+2] = ((float)i-(float)(numGridLines-1)/2);
-      gridLines[4*i+3] = (float)(numGridLines-1)/2;
-    }
-  for(unsigned i=0; i<numGridLines; ++i)
-    {
-      gridLines[4*numGridLines+4*i] = -(float)(numGridLines-1)/2;
-      gridLines[4*numGridLines+4*i+1] = ((float)i-(float)(numGridLines-1)/2);
-      gridLines[4*numGridLines+4*i+2] = (float)(numGridLines-1)/2;
-      gridLines[4*numGridLines+4*i+3] = ((float)i-(float)(numGridLines-1)/2);
-    }
-  */
   
   glGenVertexArrays(1, &vao);
   glGenBuffers(1, &vbo);
@@ -82,8 +131,6 @@ void World::initialize()
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, 6*numGridLines*numGridLines*sizeof(Vertex), &(vertices[0].position.x), GL_DYNAMIC_DRAW);
   
-  // glBufferData(GL_ARRAY_BUFFER, 8*numGridLines*sizeof(float), gridLines, GL_STATIC_DRAW);
-
   glBindVertexArray(vao);
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
@@ -92,8 +139,6 @@ void World::initialize()
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
   glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(2*sizeof(float)));
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(6*sizeof(float)));
-
-  //glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
   		    
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);

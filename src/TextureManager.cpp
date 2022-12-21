@@ -10,7 +10,7 @@ std::map<std::string, TextureInfo> TextureManager::textures;
 void TextureManager::loadTexture(const std::string& fileName, unsigned char*& data,
 			   unsigned& width, unsigned& height)
 {
-  FILE *fp = fopen(fileName.c_str(), "r");
+  FILE* fp = fopen(fileName.c_str(), "r");
   if(!fp)
     {
       std::cout << "Can not open texture file " << fileName << std::endl;
