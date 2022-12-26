@@ -54,7 +54,6 @@ class Game
   std::vector<Building*> buildings;
   Building newBuilding;
   
-  Camera camera;
   InputManager inputManager;
   
   void fatalError(const std::string&);

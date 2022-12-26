@@ -29,9 +29,10 @@ void Building::draw()
 {  
   // Update Position
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(pos.x, pos.y, 0.0f));
-  // model = glm::scale(model, glm::vec3(1.0));
-
+  glm::vec4 screenPosition = Camera::getCameraMatrix()*glm::vec4(pos.x, pos.y, 0.0f, 1.0f);
+  model = glm::translate(model, glm::vec3(screenPosition[0], screenPosition[1], 0.0f));
+  model = glm::scale(model, glm::vec3(Camera::getZoom()));
+  
   glUniformMatrix4fv(0, 1, GL_FALSE, &(model[0][0]));
   
   glBindVertexArray(vao);

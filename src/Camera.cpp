@@ -29,7 +29,6 @@ void Camera::updateMatrix()
 
 void Camera::getWorldFromScreenCoords(float x, float y, float& worldX, float& worldY) 
 {
-  //y -= cameraPositionY;
   x = (x/zoom-cameraPositionX);
   y = (y/zoom-cameraPositionY);
   float z = tan(M_PI/3.0f)*y;

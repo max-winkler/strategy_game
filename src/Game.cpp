@@ -55,7 +55,7 @@ void Game::initialize()
   const GLubyte* rendererVersion = glGetString(GL_VERSION);
   std::cout << "Renderer: " << rendererVersion << std::endl;
 
-  camera.updateMatrix();
+  Camera::updateMatrix();
   
   world.initialize(std::string("scenarios/world1.png"));
   
@@ -123,7 +123,7 @@ void Game::processInput()
 	break;
 
         case SDL_MOUSEWHEEL:
-	camera.increaseZoom(0.05*evt.wheel.y);
+	Camera::increaseZoom(0.05*evt.wheel.y);
 	break;
 
         case SDL_MOUSEMOTION:
@@ -148,13 +148,13 @@ void Game::processInput()
   // Scroll window
   MousePosition mousePosition = inputManager.getMousePosition();
   if(std::abs(mousePosition.x) < 10)
-    camera.scroll(-scrollSpeed, 0.0f);
+    Camera::scroll(-scrollSpeed, 0.0f);
   if(std::abs(screenWidth - mousePosition.x) < 10)
-    camera.scroll(scrollSpeed, 0.0f);
+    Camera::scroll(scrollSpeed, 0.0f);
   if(std::abs(mousePosition.y) < 10)
-    camera.scroll(0.0f, scrollSpeed);
+    Camera::scroll(0.0f, scrollSpeed);
   if(std::abs(screenHeight - mousePosition.y) < 10)
-    camera.scroll(0.0f, -scrollSpeed);
+    Camera::scroll(0.0f, -scrollSpeed);
   
   // Stop program
   if(inputManager.isPressed(SDLK_ESCAPE))
@@ -182,7 +182,7 @@ void Game::drawScene()
 
   // Set camera matrix
   GLuint cameraMatrixLocation = glGetUniformLocation(glslPrograms[0].getId(), "projection");
-  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, camera.getCameraMatrixPtr());
+  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, Camera::getCameraMatrixPtr());
   
   world.draw();  
 
@@ -195,7 +195,7 @@ void Game::drawScene()
   glUseProgram(glslPrograms[1].getId());  
   
   cameraMatrixLocation = glGetUniformLocation(glslPrograms[1].getId(), "projection");
-  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, camera.getCameraMatrixPtr());
+  glUniformMatrix4fv(cameraMatrixLocation, 1, GL_FALSE, Camera::getCameraMatrixPtr());
   
   /*
     for(auto it = buildings.begin(); it != buildings.end(); ++it)
@@ -206,8 +206,9 @@ void Game::drawScene()
   if(buildMode)
     {
       float mousePositionWorld[2];
-      camera.getWorldFromScreenCoords(mousePositionScreen[0], mousePositionScreen[1],
+      Camera::getWorldFromScreenCoords(mousePositionScreen[0], mousePositionScreen[1],
 			        mousePositionWorld[0], mousePositionWorld[1]);
+      // std::cout << "Mouse position: " << mousePositionWorld[0] << " " << mousePositionWorld[1] << std::endl;
       newBuilding.setPosition(floor(mousePositionWorld[0])+0.5f, floor(mousePositionWorld[1])+0.5f);
 
       newBuilding.draw();
