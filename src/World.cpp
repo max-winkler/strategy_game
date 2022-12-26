@@ -6,6 +6,7 @@
 
 #include "World.h"
 
+
 World::World(unsigned x) :
   worldSize(2*x*cellWidth),
   numGridLines(2*x+1)
@@ -43,6 +44,7 @@ void World::initialize(const std::string& scenarioFile)
   {
     unsigned row;
     unsigned colMin, colMax;
+    TileType tileType;
   };
 
   const unsigned tilesPerRow = 16;
@@ -60,9 +62,9 @@ void World::initialize(const std::string& scenarioFile)
   std::cout << "Hash class created\n";
   
   std::unordered_map<RGBAColor, TileIndexRange, RGBAColorHash> mapTileIndexRanges
-    = {{{0, 0, 255, 255}, {4, 8, 13}},
-       {{0, 255, 0, 255}, {0, 0, 15}},
-       {{255, 255, 0, 255}, {7, 0, 6}}};    
+    = {{{0, 0, 255, 255}, {4, 8, 13, TileType::WATER}},
+       {{0, 255, 0, 255}, {0, 0, 15, TileType::GRASS}},
+       {{255, 255, 0, 255}, {9, 1, 4, TileType::DESSERT}}};    
 
   std::cout << "Map tile index ranges initialized.\n";
   
@@ -83,8 +85,10 @@ void World::initialize(const std::string& scenarioFile)
   const float overlap = 1.0f/50;
     
   vertices = new Vertex[2*3*numGridLines*numGridLines];
+  mapTiles = new TileType[mapWidth*mapHeight];
+		       
   for(int i=0; i<mapHeight; ++i)
-    {
+    {			   
       float x = (float)i-(float)(numGridLines-1)/2.0f;
       for(int j=0; j<mapWidth; ++j)
         {
@@ -107,12 +111,15 @@ void World::initialize(const std::string& scenarioFile)
 		    << (int)mapPixel.r << " " << (int)mapPixel.g
 		    << " " << (int)mapPixel.b << " " << (int)mapPixel.a << ")" << std::endl;
 	    std::cout << "  pixel position : " << i << " " << j << std::endl;
-	      return;
+	    return;
 	  }
 	
 	TileIndexRange mapTileIndexRange = mapTileIndexRanges[mapPixel];
+
+	mapTiles[i*mapWidth + j] = mapTileIndexRange.tileType;
 	
-	int textureIdx = mapTileIndexRange.row*tilesPerRow + mapTileIndexRange.colMin + idist(gen)%(mapTileIndexRange.colMax-mapTileIndexRange.colMin);
+	int textureIdx = mapTileIndexRange.row*tilesPerRow + mapTileIndexRange.colMin
+	  + idist(gen)%(mapTileIndexRange.colMax-mapTileIndexRange.colMin);
 	glm::vec4 uv = spriteSheet.getUVs(textureIdx);
 	
 	vertices[6*(numGridLines*i+j) + 0].setUV(0.5*(uv.x+uv.z), uv.w);
@@ -123,7 +130,121 @@ void World::initialize(const std::string& scenarioFile)
 	vertices[6*(numGridLines*i+j) + 5].setUV(uv.x, 0.25*uv.y + 0.75*uv.w);
         }
     }
-  
+
+  // Set transition tiles near water
+  for(int i=0; i<mapHeight; ++i)
+    {
+      for(int j=0; j<mapWidth; ++j)
+        {		
+	if(mapTiles[i*mapWidth+j] != TileType::WATER)
+	  continue;
+
+	const int eastTileType      = 1<<0;
+	const int northTileType     = 1<<1;
+	const int westTileType      = 1<<2;
+	const int southTileType     = 1<<3;
+	const int northEastTileType = 1<<4;
+	const int northWestTileType = 1<<5;
+	const int southWestTileType = 1<<6;
+	const int southEastTileType = 1<<7;
+
+	// Determine number
+	int neighTypes = 0;
+
+	if(j>0 && mapTiles[i*mapWidth+j-1] != TileType::WATER)
+	    neighTypes = neighTypes | westTileType;        
+	if(j<mapWidth-1 && mapTiles[i*mapWidth+j+1] != TileType::WATER)
+	  neighTypes = neighTypes | eastTileType;
+	if(i<mapHeight-1 && mapTiles[(i+1)*mapWidth+j] != TileType::WATER)
+	  neighTypes = neighTypes | northTileType;
+	if(i>0 && mapTiles[(i-1)*mapWidth+j] != TileType::WATER)
+	  neighTypes = neighTypes | southTileType;
+	
+	if(j<mapWidth-1 && i<mapHeight-1 && mapTiles[(i+1)*mapWidth+j+1] != TileType::WATER)
+	  neighTypes = neighTypes | northEastTileType;
+	if(j>0 && i<mapHeight-1 && mapTiles[(i+1)*mapWidth+j-1] != TileType::WATER)
+	  neighTypes = neighTypes | northWestTileType;
+	if(j>0 && i>0 && mapTiles[(i-1)*mapWidth+j-1] != TileType::WATER)
+	  neighTypes = neighTypes | southWestTileType;
+	if(j<mapWidth-1 && i>0 && mapTiles[(i-1)*mapWidth+j+1] != TileType::WATER)
+	  neighTypes = neighTypes | southEastTileType;
+
+	// Select texture depending on neighbor tiles
+	int textureIdx;
+	bool flip;
+	
+	switch(neighTypes)	  
+	  {
+	  case eastTileType | southEastTileType | northEastTileType:
+	  case eastTileType | northEastTileType:
+	  case eastTileType | southEastTileType:
+	    textureIdx = 0;
+	    break;
+	  case northTileType | northEastTileType | northWestTileType:
+	  case northTileType | northEastTileType:
+	  case northTileType | northWestTileType:
+	    textureIdx = 2;
+	    break;
+	  case southTileType | southEastTileType | southWestTileType:
+	  case southTileType | southEastTileType:
+	  case southTileType | southWestTileType:
+	    textureIdx = 6;
+	    break;
+	  case westTileType | southWestTileType | northWestTileType:
+	  case westTileType | northWestTileType:
+	  case westTileType | southWestTileType:
+	    textureIdx = 9;
+	    break;
+	  case southWestTileType:
+	    textureIdx = 12;
+	    break;
+	  case southEastTileType:
+	    textureIdx = 13;
+	    break;
+	  case northEastTileType:
+	    textureIdx = 14;
+	    break;
+	  case northWestTileType:
+	    textureIdx = 15;
+	    break;	    
+	  case northTileType | eastTileType | northEastTileType | southEastTileType:
+	  case northTileType | eastTileType | northEastTileType | northWestTileType:
+	  case northTileType | eastTileType | northEastTileType:
+	    textureIdx = 1;
+	    break;
+	  case westTileType | southTileType | southWestTileType | northWestTileType:
+	  case westTileType | southTileType | southWestTileType | southEastTileType:
+	  case westTileType | southTileType | southWestTileType:
+	    textureIdx = 4;
+	    break;
+	  case eastTileType | southTileType | southEastTileType | northEastTileType:
+	  case eastTileType | southTileType | southEastTileType | southWestTileType:
+	  case eastTileType | southTileType | southEastTileType:
+	    textureIdx = 7;
+	    break;
+	  case westTileType | northTileType | northWestTileType | northEastTileType:
+	  case westTileType | northTileType | northWestTileType | southWestTileType:
+	  case westTileType | northTileType | northWestTileType:
+	    textureIdx = 10;
+	    break;	    	    
+	  default:
+	    neighTypes = 0;
+	    break;
+	  }
+	
+	if(neighTypes != 0)
+	  {
+	    glm::vec4 uv = spriteSheet.getUVs(5*tilesPerRow+textureIdx);
+	    
+	    vertices[6*(numGridLines*i+j) + 0].setUV(0.5*(uv.x+uv.z), uv.w);
+	    vertices[6*(numGridLines*i+j) + 1].setUV(uv.z, 0.25*uv.y + 0.75*uv.w);
+	    vertices[6*(numGridLines*i+j) + 2].setUV(0.5*(uv.x+uv.z), 0.5*uv.y + 0.5*uv.w);
+	    vertices[6*(numGridLines*i+j) + 3].setUV(0.5*(uv.x+uv.z), uv.w);
+	    vertices[6*(numGridLines*i+j) + 4].setUV(0.5*(uv.x+uv.z), 0.5*uv.y + 0.5*uv.w);
+	    vertices[6*(numGridLines*i+j) + 5].setUV(uv.x, 0.25*uv.y + 0.75*uv.w);
+	  }
+        }
+    }
   
   glGenVertexArrays(1, &vao);
   glGenBuffers(1, &vbo);

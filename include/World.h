@@ -6,6 +6,11 @@
 #include "Vertex.h"
 #include "SpriteSheet.h"
 
+enum TileType
+  {
+    GRASS, WATER, DESSERT
+  };
+
 class World
 {
  public:
@@ -27,8 +32,11 @@ class World
   // Sprite sheet containing tiles of the world
   SpriteSheet spriteSheet;
 
-  // 6 vertices of the two triangles forming a tile
+  // Vertices of the two triangles forming a tile
   Vertex* vertices;
+
+  // Map tile types
+  TileType* mapTiles;
 };
 
 #endif
