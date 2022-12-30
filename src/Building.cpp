@@ -9,7 +9,7 @@
 #include "TextureManager.h"
 
 Building::Building(float x, float y) :
-  Sprite(x, y, 1.0f, 1.0f)
+  Sprite(x, y, 2.0f, 2.0f)
 {
 }
 

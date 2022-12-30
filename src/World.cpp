@@ -1,6 +1,9 @@
 #include <iostream>
+#include <algorithm>
 #include <random>
 #include <unordered_map>
+#include <set>
+#include <vector>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -21,7 +24,7 @@ void World::initialize(const std::string& scenarioFile)
 {  
   // Read map file
   unsigned mapHeight, mapWidth;
-  unsigned char* mapDataPtr; // = reinterpret_cast<unsigned char*>(mapData);
+  unsigned char* mapDataPtr;
   TextureManager::loadTexture(scenarioFile, mapDataPtr, mapHeight, mapWidth);
 
   // Store map data in a struct
@@ -286,4 +289,150 @@ void World::getCellCoordinates(unsigned i, unsigned j, float& x, float& y) const
 {
   x = ((float)(i+0.5f)-(float)(numGridLines-1)/2);
   y = ((float)(j+0.5f)-(float)(numGridLines-1)/2);
+}
+
+Route World::getShortestPath(float startX, float startY, float targetX, float targetY) const
+{
+  unsigned startI = (unsigned)(startX+(numGridLines-1)/2.0f);
+  unsigned startJ = (unsigned)(startY+(numGridLines-1)/2.0f);
+  unsigned targetI = (unsigned)(targetX+(numGridLines-1)/2.0f);
+  unsigned targetJ = (unsigned)(targetY+(numGridLines-1)/2.0f);
+
+  std::cout << "Going from cell (" << startI << "," << startJ << ") to (" << targetI << "," << targetJ << ")\n";
+  
+  struct Cell
+  {
+    Cell() {}
+    Cell(unsigned i, unsigned j, float gScore, float hScore)
+      : i(i), j(j), gScore(gScore), hScore(hScore), fScore(gScore+hScore) {}
+    
+    bool operator<(const Cell& other) const
+    {
+      return this->fScore < other.fScore;
+    }
+    
+    unsigned i, j;
+    float gScore, hScore, fScore;
+  };
+
+  class FindByIdx
+  {
+  public:
+    FindByIdx(unsigned i, unsigned j) : i(i), j(j) {}
+    bool operator()(const Cell& cell)
+    {
+      return (cell.i == i && cell.j == j);
+    }
+  private:
+    unsigned i, j;
+  };
+  
+  typedef std::map<std::pair<unsigned,unsigned>, Cell> List;
+
+  // Manhatten distance function
+  auto distance = [](unsigned startI, unsigned startJ, unsigned targetI, unsigned targetJ) ->float
+  {
+    return (float)(std::abs((int)(startI - targetI)) + std::abs((int)(startJ - targetJ)));
+  };
+  
+  List openList, closedList;
+  std::map<std::pair<unsigned, unsigned>, std::pair<unsigned,unsigned>> cameFrom;
+
+  // Insert start element
+  float hScore = distance(startI, startJ, targetI, targetJ);
+  openList[std::make_pair(startI,startJ)] =  Cell(startI, startJ, 0, hScore);
+
+  while(!openList.empty())
+    {
+      // Extract element with smallest fScore
+
+      // Find smallest element      
+      List::iterator smallestPtr = openList.begin();
+      for(List::iterator currentPtr = openList.begin(); currentPtr != openList.end(); ++currentPtr)
+        if(currentPtr->second.fScore < smallestPtr->second.fScore)
+	smallestPtr = currentPtr;
+      
+      Cell current = smallestPtr->second;
+      openList.erase(smallestPtr);
+      std::pair<unsigned, unsigned> currentIdxPair(current.i, current.j);
+      closedList[currentIdxPair] = current;
+      
+      if(current.i == targetI && current.j == targetJ)
+        break;
+      
+      // Create list of neighbors
+      std::vector<Cell> neighbors = {
+        Cell(current.i+1, current.j,   current.gScore+1.0f,        distance(current.i+1, current.j,   targetI, targetJ)),
+        Cell(current.i+1, current.j+1, current.gScore+sqrtf(2.0f), distance(current.i+1, current.j+1, targetI, targetJ)),
+        Cell(current.i,   current.j+1, current.gScore+1.0f,        distance(current.i, current.j+1,   targetI, targetJ)),
+        Cell(current.i-1, current.j+1, current.gScore+sqrtf(2.0f), distance(current.i-1, current.j+1, targetI, targetJ)),
+        Cell(current.i-1, current.j,   current.gScore+1.0f,        distance(current.i-1, current.j,   targetI, targetJ)), 
+        Cell(current.i-1, current.j-1, current.gScore+sqrtf(2.0f), distance(current.i-1, current.j-1, targetI, targetJ)),
+        Cell(current.i,   current.j-1, current.gScore+1.0f,        distance(current.i, current.j-1,   targetI, targetJ)),
+        Cell(current.i+1, current.j-1, current.gScore+sqrtf(2.0f), distance(current.i+1, current.j-1, targetI, targetJ))
+      };
+
+      for(auto it=neighbors.begin(); it != neighbors.end(); ++it)
+        {
+	// Check if cell exceeds boundary
+	if(it->i < 0 || it->i >= numGridLines-1 || it->j < 0 || it->j >= numGridLines-1)
+	  continue;
+
+	// Check if cell is a water tile
+	if(mapTiles[it->i*(numGridLines-1) + it->j] == TileType::WATER)
+	  continue;
+
+	std::pair<unsigned,unsigned> idxPair(it->i, it->j);
+	// Find tile in openList
+	List::iterator elem_it = openList.find(idxPair);
+	if(elem_it == openList.end())
+	  {
+	    // Check if element is in closed list
+	    List::iterator closed_elem_it = closedList.find(idxPair);
+	    if(closed_elem_it != closedList.end())
+	      {
+	        // If element is in closed list, shift to open list when new path is shorter
+	        if(closed_elem_it->second.gScore > it->gScore)
+		{
+		  closedList.erase(closed_elem_it);
+		  openList[idxPair] = *it;
+		  cameFrom[idxPair] = currentIdxPair;
+		}
+	      }
+	    else
+	      {
+	        // Tile is neither in open nor in closed list
+	        openList[idxPair] = *it;
+	        cameFrom[idxPair] = currentIdxPair;
+	      }	    	    
+	  }
+	else
+	  {
+	    // Element is in open list
+	    if(elem_it->second.gScore > it->gScore)
+	      {
+	        // The new path to the neighbor is better than the previously found one
+	        openList[idxPair] = *it;
+	        cameFrom[idxPair] = currentIdxPair;
+	      }
+	  }
+        }
+    }
+
+  // Build up path
+  std::pair<unsigned, unsigned> parent(targetI, targetJ);
+  std::cout << "Found route: ";
+  std::cout << "(" << parent.first << "," << parent.second << ") ";
+
+  int k=0;
+  while(k<100 && parent != std::pair<unsigned, unsigned>(startI, startJ))
+    {
+      parent = cameFrom[parent];
+      std::cout << "(" << parent.first << "," << parent.second << ") ";
+      k++;
+    }
+  std::cout << std::endl;
+  if(k==100)
+    std::cout << "Some error occured.\n";
+  return Route();
 }

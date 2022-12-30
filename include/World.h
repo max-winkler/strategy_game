@@ -11,6 +11,11 @@ enum TileType
     GRASS, WATER, DESSERT
   };
 
+class Route
+{
+  
+};
+
 class World
 {
  public:
@@ -21,6 +26,8 @@ class World
   void draw();
 
   void getCellCoordinates(unsigned, unsigned, float&, float&) const;
+
+  Route getShortestPath(float, float, float, float) const;
  private:
   
   const unsigned cellWidth = 128;

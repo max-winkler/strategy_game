@@ -129,7 +129,20 @@ void Game::processInput()
         case SDL_MOUSEMOTION:
 	inputManager.setMousePosition(evt.motion.x, evt.motion.y);
 	break;
-	
+        case SDL_MOUSEBUTTONDOWN:
+	if(evt.button.button == SDL_BUTTON_RIGHT)
+	  {	    
+	    float x, y;
+	    // Compute normalized screen coordinates
+	    float screenX = 2.0f*(float)(evt.button.x)/screenWidth-1.0f;
+	    float screenY = 1.0f-2.0f*(float)(evt.button.y)/screenHeight;
+
+	    // Compute world coordinates
+	    Camera::getWorldFromScreenCoords(screenX, screenY, x, y);
+	    
+	    world.getShortestPath(players[0]->pos.x, players[0]->pos.y, x, y);
+	  }
+	break;
         default:
 	break;
         }
