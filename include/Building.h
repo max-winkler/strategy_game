@@ -6,7 +6,7 @@
 class Building : public Sprite
 {
  public:
-  Building(float, float);
+  Building(World* world, float, float);
   ~Building();
 
   void initialize();

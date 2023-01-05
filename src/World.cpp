@@ -291,14 +291,27 @@ void World::getCellCoordinates(unsigned i, unsigned j, float& x, float& y) const
   y = ((float)(j+0.5f)-(float)(numGridLines-1)/2);
 }
 
-Route World::getShortestPath(float startX, float startY, float targetX, float targetY) const
+std::pair<float,float> World::getCellMidpoint(unsigned i, unsigned j) const
 {
-  unsigned startI = (unsigned)(startX+(numGridLines-1)/2.0f);
-  unsigned startJ = (unsigned)(startY+(numGridLines-1)/2.0f);
-  unsigned targetI = (unsigned)(targetX+(numGridLines-1)/2.0f);
-  unsigned targetJ = (unsigned)(targetY+(numGridLines-1)/2.0f);
+  return std::make_pair(((float)i+0.5f)/4.0f-(float)(numGridLines-1)/2,
+		    ((float)j+0.5f)/4.0f-(float)(numGridLines-1)/2);
+}
 
-  std::cout << "Going from cell (" << startI << "," << startJ << ") to (" << targetI << "," << targetJ << ")\n";
+std::pair<unsigned,unsigned> World::getCellIndices(float x, float y) const
+{
+  return std::make_pair((unsigned)(4*(x+(numGridLines-1)/2.0f)),
+		    (unsigned)(4*(y+(numGridLines-1)/2.0f)));
+}
+
+std::vector<std::pair<unsigned, unsigned>> World::getShortestPath(float startX, float startY,
+						      float targetX, float targetY) const
+{
+  unsigned startI = (unsigned)(4*(startX+(numGridLines-1)/2.0f));
+  unsigned startJ = (unsigned)(4*(startY+(numGridLines-1)/2.0f));
+  unsigned targetI = (unsigned)(4*(targetX+(numGridLines-1)/2.0f));
+  unsigned targetJ = (unsigned)(4*(targetY+(numGridLines-1)/2.0f));
+
+  std::cout << "Going from position (" << startI << "," << startJ << ") to (" << targetI << "," << targetJ << ")\n";
   
   struct Cell
   {
@@ -375,11 +388,11 @@ Route World::getShortestPath(float startX, float startY, float targetX, float ta
       for(auto it=neighbors.begin(); it != neighbors.end(); ++it)
         {
 	// Check if cell exceeds boundary
-	if(it->i < 0 || it->i >= numGridLines-1 || it->j < 0 || it->j >= numGridLines-1)
+	if(it->i < 0 || it->i >= 4*(numGridLines-1) || it->j < 0 || it->j >= 4*(numGridLines-1))
 	  continue;
 
 	// Check if cell is a water tile
-	if(mapTiles[it->i*(numGridLines-1) + it->j] == TileType::WATER)
+	if(mapTiles[(it->i)/4*(numGridLines-1) + (it->j)/4] == TileType::WATER)
 	  continue;
 
 	std::pair<unsigned,unsigned> idxPair(it->i, it->j);
@@ -419,8 +432,10 @@ Route World::getShortestPath(float startX, float startY, float targetX, float ta
         }
     }
 
-  // Build up path
+  // Build up Route
+  std::vector<std::pair<unsigned, unsigned>> route;
   std::pair<unsigned, unsigned> parent(targetI, targetJ);
+  route.push_back(parent);
   std::cout << "Found route: ";
   std::cout << "(" << parent.first << "," << parent.second << ") ";
 
@@ -428,11 +443,14 @@ Route World::getShortestPath(float startX, float startY, float targetX, float ta
   while(k<100 && parent != std::pair<unsigned, unsigned>(startI, startJ))
     {
       parent = cameFrom[parent];
+      route.push_back(parent);
       std::cout << "(" << parent.first << "," << parent.second << ") ";
       k++;
     }
   std::cout << std::endl;
   if(k==100)
     std::cout << "Some error occured.\n";
-  return Route();
+  
+  return route;
 }
+

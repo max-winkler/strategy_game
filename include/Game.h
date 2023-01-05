@@ -52,7 +52,7 @@ class Game
   World world;
   std::vector<Player*> players;
   std::vector<Building*> buildings;
-  Building newBuilding;
+  Building* newBuilding;
   
   InputManager inputManager;
   
@@ -60,6 +60,7 @@ class Game
   
   void processInput();
   void installShaders();
+  void updateGame();
   void drawScene();
   void updateFPS();
 };

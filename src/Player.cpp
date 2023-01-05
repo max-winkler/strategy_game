@@ -20,8 +20,8 @@
 #define WALK_UP     4
 #define WALK_DOWN   8
 
-Player::Player(float x, float y) :
-  Sprite(x, y, 0.5f, 0.666f), rotation(0), moveMode(0), prevMoveMode(0)
+Player::Player(World* world, float x, float y) :
+  Sprite(world, x, y, 0.5f, 0.666f), rotation(0), moveMode(0), prevMoveMode(0), targetPos(0.0f, 0.0f)
 {
 }
 
@@ -37,6 +37,9 @@ void Player::initialize()
   
   // Load sprite sheet
   spriteSheet.initialize("images/human.png", 192, 256);
+
+  // Compute initial cell
+  currentCell = world->getCellIndices(pos.x, pos.y);
 }
 
 void Player::draw()
@@ -62,9 +65,7 @@ void Player::draw()
 }
 
 void Player::move(bool se, bool nw, bool ne, bool sw)
-{
-  const float speed = 0.01f;
-  
+{  
   vel.x = ne+se-nw-sw;
   vel.y = ne+nw-se-sw;
 
@@ -94,12 +95,12 @@ void Player::updateAnimation()
 
   int textureIdx = 0;
   bool flip = false;
-  
-  if(moveMode == WALK_RIGHT)
+
+  if(moveMode == (WALK_RIGHT | WALK_DOWN))
     {
       textureIdx = (time/150)%8+1;
     }
-  else if(moveMode == WALK_LEFT)
+  else if(moveMode == (WALK_LEFT | WALK_UP))
     {
       textureIdx = (time/150)%8+1;
       flip = true;
@@ -126,4 +127,87 @@ void Player::updateAnimation()
   glBindBuffer(GL_ARRAY_BUFFER, vbo);  
   glBufferSubData(GL_ARRAY_BUFFER, 0, 6*sizeof(Vertex), &vertices);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Player::updatePosition()
+{
+  // Check if movement is necessary
+  if(moveMode != 0)
+    {
+      // Move player
+
+      // Compute velocity
+      vel.x = ((moveMode & WALK_RIGHT) != 0) - ((moveMode & WALK_LEFT) != 0);
+      vel.y = ((moveMode & WALK_UP) != 0) - ((moveMode & WALK_DOWN) != 0);
+      
+      // Normalize
+      float norm = sqrtf(vel.x*vel.x + vel.y*vel.y);
+      if(norm > 0.0f)
+        {
+	vel.x /= norm;
+	vel.y /= norm;
+        }
+      
+      pos.x += speed*vel.x;
+      pos.y += speed*vel.y;
+      
+      // Check if target is reached
+
+      // Get target coordinates
+      std::pair<float, float> targetCoords = world->getCellMidpoint(targetCell.first, targetCell.second);
+      
+      // Check if midpoint of target cell reached
+      if(((moveMode & WALK_RIGHT)   != 0 && pos.x > targetCoords.first)
+         || ((moveMode & WALK_LEFT) != 0 && pos.x < targetCoords.first)
+         || ((moveMode & WALK_UP)   != 0 && pos.y > targetCoords.second)
+         || ((moveMode & WALK_DOWN) != 0 && pos.y < targetCoords.second))
+        {	    
+	pos.x = targetCoords.first;
+	pos.y = targetCoords.second;
+	
+	// correct position
+	std::cout << "Reached target " << pos.x << " " << pos.y << std::endl;
+	std::cout << "This is cell " << targetCell.first << " " << targetCell.second << std::endl;
+	
+	// unset move mode
+	prevMoveMode = moveMode;
+	moveMode = WALK_OFF;
+        }
+    }
+  
+  // If player standing still get next part of route from stack
+  if(moveMode == WALK_OFF)
+    {     
+      // Do nothing when no route assigned to player
+      if(route.empty())
+        return;
+	  
+      targetCell = route.back();
+      route.pop_back();
+      currentCell = world->getCellIndices(pos.x, pos.y);
+
+      std::cout << "Pick next part of route.\n";
+      std::cout << "Current cell: " << currentCell.first << " " << currentCell.second << std::endl;
+      std::cout << "Target cell: " << targetCell.first << " " << targetCell.second << std::endl;
+      
+      // Calculate movement direction
+      int newMoveMode = moveMode;
+      if(targetCell.first > currentCell.first)
+        moveMode |= WALK_RIGHT;
+      else if(targetCell.first < currentCell.first)
+        moveMode |= WALK_LEFT;
+
+      if(targetCell.second > currentCell.second)
+        moveMode |= WALK_UP;
+      else if(targetCell.second < currentCell.second)
+        moveMode |= WALK_DOWN;
+    }
+
+  
+}
+
+void Player::gotoPosition(float targetX, float targetY, std::vector<std::pair<unsigned,unsigned>> route)
+{
+  targetPos = {targetX, targetY};
+  this->route = route;
 }

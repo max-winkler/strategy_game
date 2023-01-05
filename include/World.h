@@ -1,6 +1,7 @@
 #ifndef _WORLD_H_
 #define _WORLD_H_
 
+#include <vector>
 #include <GL/glew.h>
 
 #include "Vertex.h"
@@ -26,8 +27,10 @@ class World
   void draw();
 
   void getCellCoordinates(unsigned, unsigned, float&, float&) const;
-
-  Route getShortestPath(float, float, float, float) const;
+  std::pair<float, float> getCellMidpoint(unsigned, unsigned) const;
+  std::pair<unsigned,unsigned> getCellIndices(float, float) const;
+  
+  std::vector<std::pair<unsigned, unsigned>> getShortestPath(float, float, float, float) const;
  private:
   
   const unsigned cellWidth = 128;

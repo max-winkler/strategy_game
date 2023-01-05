@@ -8,8 +8,8 @@
 #include "Vertex.h"
 #include "TextureManager.h"
 
-Building::Building(float x, float y) :
-  Sprite(x, y, 2.0f, 2.0f)
+Building::Building(World* world, float x, float y) :
+  Sprite(world, x-1.0f, y-1.0f, 2.0f, 2.0f)
 {
 }
 
@@ -43,6 +43,6 @@ void Building::draw()
 
 void Building::setPosition(float x, float y)
 {
-  pos.x = x;
-  pos.y = y;
+  pos.x = x-1.0f;
+  pos.y = y-1.0f;
 }

@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 
+#include "World.h"
 #include "Vertex.h"
 #include "Camera.h"
 #include "SpriteSheet.h"
@@ -16,7 +17,7 @@ struct Position {
 class Sprite
 {
  public:
-  Sprite(float, float, float, float);
+  Sprite(World*, float, float, float, float);
   ~Sprite();
 
   void initialize();
@@ -33,6 +34,7 @@ class Sprite
   GLuint textureID; // Remove this and use spriteSheet later
   SpriteSheet spriteSheet;
   Vertex vertices[6];
+  World* world;
 };
 
 #endif

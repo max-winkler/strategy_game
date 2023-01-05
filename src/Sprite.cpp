@@ -3,8 +3,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
-Sprite::Sprite(float x, float y, float width, float height)
-  : pos(x, y), size(width, height), vbo(0), vao(0), alpha(1.0)
+Sprite::Sprite(World* world, float x, float y, float width, float height)
+  : world(world), pos(x, y), size(width, height), vbo(0), vao(0), alpha(1.0)
 {
 }
 
@@ -14,12 +14,12 @@ Sprite::~Sprite()
 
 void Sprite::initialize()
 {
-  vertices[0].setPosition(-size.x/2.0f, -size.y/2.0f);
-  vertices[1].setPosition( size.x/2.0f, -size.y/2.0f);
-  vertices[2].setPosition(-size.x/2.0f,  size.y/2.0f);
-  vertices[3].setPosition( size.x/2.0f, -size.y/2.0f);
-  vertices[4].setPosition( size.x/2.0f,  size.y/2.0f);
-  vertices[5].setPosition(-size.x/2.0f,  size.y/2.0f);
+  vertices[0].setPosition(-size.x/2.0f, 0.0f);
+  vertices[1].setPosition( size.x/2.0f, 0.0f);
+  vertices[2].setPosition(-size.x/2.0f, size.y);
+  vertices[3].setPosition( size.x/2.0f, 0.0f);
+  vertices[4].setPosition( size.x/2.0f, size.y);
+  vertices[5].setPosition(-size.x/2.0f, size.y);
 
   vertices[0].setColor(0.9, 0.6, 0.7, alpha);
   vertices[1].setColor(0.8, 0.7, 0.2, alpha);

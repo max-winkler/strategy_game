@@ -6,8 +6,7 @@
 #include <glm/gtx/transform.hpp>
 
 Game::Game() : world(50),
-	     buildMode(false),
-	     newBuilding(0,0)
+	     buildMode(false)
 {
 }
 
@@ -59,7 +58,7 @@ void Game::initialize()
   
   world.initialize(std::string("scenarios/world1.png"));
   
-  players.push_back(new Player(0.0f, 0.0f));
+  players.push_back(new Player(&world, 0.0f, 0.0f));
   players.back()->initialize();
 
   float x, y;
@@ -67,8 +66,9 @@ void Game::initialize()
   //buildings.push_back(new Building(x, y));
   //buildings.back()->initialize();
 
-  newBuilding.setAlpha(0.2f);
-  newBuilding.initialize();
+  newBuilding = new Building(&world, 0.0f, 0.0f);
+  newBuilding->setAlpha(0.2f);
+  newBuilding->initialize();
   
   gameState = GameState::RUNNING;
 }
@@ -85,6 +85,7 @@ void Game::run()
       lastTick = SDL_GetTicks();
 
       processInput();
+      updateGame();
       drawScene();
       updateFPS();
 
@@ -139,8 +140,9 @@ void Game::processInput()
 
 	    // Compute world coordinates
 	    Camera::getWorldFromScreenCoords(screenX, screenY, x, y);
-	    
-	    world.getShortestPath(players[0]->pos.x, players[0]->pos.y, x, y);
+
+	    // Set target player position
+	    players[0]->gotoPosition(x, y, world.getShortestPath(players[0]->pos.x, players[0]->pos.y, x, y));
 	  }
 	break;
         default:
@@ -149,8 +151,8 @@ void Game::processInput()
     }
 
   // Process pressed keys
-  players[0]->move(inputManager.isPressed(SDLK_RIGHT), inputManager.isPressed(SDLK_LEFT),
-	         inputManager.isPressed(SDLK_UP), inputManager.isPressed(SDLK_DOWN));
+  //players[0]->move(inputManager.isPressed(SDLK_RIGHT), inputManager.isPressed(SDLK_LEFT),
+  // inputManager.isPressed(SDLK_UP), inputManager.isPressed(SDLK_DOWN));
   /*	         
   players[0]->pos.x += 0.02f/sqrt(2.0f)*(inputManager.isPressed(SDLK_RIGHT)-inputManager.isPressed(SDLK_LEFT));
   players[0]->pos.x += 0.02f/sqrt(2.0f)*(inputManager.isPressed(SDLK_UP)-inputManager.isPressed(SDLK_DOWN));
@@ -222,9 +224,9 @@ void Game::drawScene()
       Camera::getWorldFromScreenCoords(mousePositionScreen[0], mousePositionScreen[1],
 			        mousePositionWorld[0], mousePositionWorld[1]);
       // std::cout << "Mouse position: " << mousePositionWorld[0] << " " << mousePositionWorld[1] << std::endl;
-      newBuilding.setPosition(floor(mousePositionWorld[0])+0.5f, floor(mousePositionWorld[1])+0.5f);
+      newBuilding->setPosition(floor(mousePositionWorld[0])+0.5f, floor(mousePositionWorld[1])+0.5f);
 
-      newBuilding.draw();
+      newBuilding->draw();
     }
   
   for(auto it = players.begin(); it != players.end(); ++it)
@@ -267,4 +269,12 @@ void Game::updateFPS()
       std::cout << "Frame rate: " << fps << " f/s" << std::endl;
     }
   
+}
+
+void Game::updateGame()
+{
+  for(auto player = players.begin(); player!=players.end(); ++player)
+    {
+      (*player)->updatePosition();
+    }
 }
