@@ -150,6 +150,8 @@ void Player::updatePosition()
       
       pos.x += speed*vel.x;
       pos.y += speed*vel.y;
+
+      currentCell = world->getCellIndices(pos.x, pos.y);
       
       // Check if target is reached
 
