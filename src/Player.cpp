@@ -36,7 +36,7 @@ void Player::initialize()
   Sprite::initialize();
   
   // Load sprite sheet
-  spriteSheet.initialize("images/human.png", 192, 256);
+  spriteSheet.initialize("images/human_walking_pixel.png", 64, 64);
 
   // Compute initial cell
   currentCell = world->getCellIndices(pos.x, pos.y);
@@ -98,20 +98,29 @@ void Player::updateAnimation()
 
   if(moveMode == (WALK_RIGHT | WALK_DOWN))
     {
-      textureIdx = (time/150)%8+1;
+      textureIdx = 10+(time/120)%10;
+      flip = true;
     }
   else if(moveMode == (WALK_LEFT | WALK_UP))
     {
-      textureIdx = (time/150)%8+1;
+      textureIdx = 10+(time/120)%10;
+    }  
+  else if(moveMode == WALK_UP)
+    {
+      textureIdx = (time/120)%10;
+    }
+  else if(moveMode == WALK_RIGHT)
+    {
+      textureIdx = (time/120)%10;
       flip = true;
     }
   else
     {
       // Implement animations for other movement directions when spree sheet is completed
-      textureIdx = 0;
+      textureIdx = 1;
       if(prevMoveMode & WALK_LEFT)
         {
-	flip = true;
+	flip = false;
         }
     }
   
