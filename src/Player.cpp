@@ -21,7 +21,8 @@
 #define WALK_DOWN   8
 
 Player::Player(World* world, float x, float y) :
-  Sprite(world, x, y, 0.5f, 0.666f), rotation(0), moveMode(0), prevMoveMode(0), targetPos(0.0f, 0.0f)
+  Sprite(world, x, y, 0.5f, 0.666f), rotation(0), moveMode(0), prevMoveMode(WALK_RIGHT | WALK_DOWN),
+  targetPos(0.0f, 0.0f)
 {
 }
 
@@ -36,7 +37,7 @@ void Player::initialize()
   Sprite::initialize();
   
   // Load sprite sheet
-  spriteSheet.initialize("images/human_walking_pixel.png", 64, 64);
+  spriteSheet.initialize("images/human_running.png", 64, 64);
 
   // Compute initial cell
   currentCell = world->getCellIndices(pos.x, pos.y);
@@ -93,37 +94,84 @@ void Player::updateAnimation()
 {
   unsigned time = SDL_GetTicks();
 
+  int sheetRow = 0;
   int textureIdx = 0;
+  int nCols = 6;
   bool flip = false;
-
-  if(moveMode == (WALK_RIGHT | WALK_DOWN))
+  
+  if(moveMode == WALK_DOWN)
     {
-      textureIdx = 10+(time/120)%10;
+      sheetRow = 1;
       flip = true;
     }
-  else if(moveMode == (WALK_LEFT | WALK_UP))
+  else if(moveMode == (WALK_RIGHT | WALK_DOWN))
     {
-      textureIdx = 10+(time/120)%10;
-    }  
-  else if(moveMode == WALK_UP)
-    {
-      textureIdx = (time/120)%10;
+      sheetRow = 2;
+      flip = true;
     }
   else if(moveMode == WALK_RIGHT)
     {
-      textureIdx = (time/120)%10;
+      sheetRow = 3;
       flip = true;
+    }
+  else if(moveMode == (WALK_RIGHT | WALK_UP))
+    {
+      sheetRow = 4;
+    }  
+  else if(moveMode == WALK_UP)
+    {
+      sheetRow = 3;
+    }
+  else if(moveMode == (WALK_LEFT | WALK_UP))
+    {
+      sheetRow = 2;
+    }
+  else if(moveMode == WALK_LEFT)
+    {
+      sheetRow = 1;
+    }
+  else if(moveMode == (WALK_LEFT | WALK_DOWN))
+    {
+      sheetRow = 0;
     }
   else
     {
-      // Implement animations for other movement directions when spree sheet is completed
+      // Idle animation
+      nCols = spriteSheet.getNCols();    
       textureIdx = 1;
-      if(prevMoveMode & WALK_LEFT)
+      switch(prevMoveMode)
         {
-	flip = false;
+        case WALK_DOWN:
+	sheetRow = 6;
+	flip = true;
+	break;
+        case WALK_RIGHT | WALK_DOWN:
+	sheetRow = 7;
+	break;
+        case WALK_RIGHT:
+	sheetRow = 8;
+	flip = true;
+	break;
+        case WALK_RIGHT | WALK_UP:
+	sheetRow = 9;
+	break;
+        case WALK_UP:
+	sheetRow = 8;
+	break;
+        case WALK_LEFT | WALK_UP:
+	sheetRow = 7;
+	break;
+        case WALK_LEFT:
+	sheetRow = 6;
+	break;
+        case WALK_LEFT | WALK_DOWN:
+	sheetRow = 5;
+	break;
+
         }
     }
   
+  textureIdx = (spriteSheet.getNRows()-1-sheetRow)*spriteSheet.getNCols() + (time/120)%nCols;
   glm::vec4 subtextureUV = spriteSheet.getUVs(textureIdx);
   
   vertices[0].setUV(flip ? subtextureUV.z : subtextureUV.x, subtextureUV.y);
@@ -177,8 +225,8 @@ void Player::updatePosition()
 	pos.y = targetCoords.second;
 	
 	// correct position
-	std::cout << "Reached target " << pos.x << " " << pos.y << std::endl;
-	std::cout << "This is cell " << targetCell.first << " " << targetCell.second << std::endl;
+	// std::cout << "Reached target " << pos.x << " " << pos.y << std::endl;
+	// std::cout << "This is cell " << targetCell.first << " " << targetCell.second << std::endl;
 	
 	// unset move mode
 	prevMoveMode = moveMode;

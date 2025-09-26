@@ -36,7 +36,7 @@ class Player : public Sprite
   std::pair<unsigned,unsigned> targetCell;
 
   // Player properties
-  const float speed = 0.01f;
+  const float speed = 0.02f;
 };
 
 #endif
