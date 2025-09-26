@@ -1,7 +1,7 @@
 #include "Sprite.h"
 
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 Sprite::Sprite(World* world, float x, float y, float width, float height)
   : world(world), pos(x, y), size(width, height), vbo(0), vao(0), alpha(1.0)

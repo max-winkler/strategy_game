@@ -3,7 +3,6 @@
 #include <cmath>
 #include <vector>
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
 
 Game::Game() : world(50),
 	     buildMode(false)

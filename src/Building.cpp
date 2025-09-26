@@ -2,7 +2,7 @@
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "Building.h"
 #include "Vertex.h"
